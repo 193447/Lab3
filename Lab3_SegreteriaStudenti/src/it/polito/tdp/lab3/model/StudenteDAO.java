@@ -2,6 +2,8 @@ package it.polito.tdp.lab3.model;
 
 public class StudenteDAO {
 	
+	
+
 	int matricola;
 	String nome;
 	String cognome;
@@ -44,6 +46,11 @@ public class StudenteDAO {
 
 	public void setCDS(String cDS) {
 		CDS = cDS;
+	}
+	
+	@Override
+	public String toString() {
+		return ""+matricola + nome +  cognome +  CDS ;
 	}
 	
 	

@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.lab3.db.DBConnect;
 import it.polito.tdp.lab3.model.CorsoDAO;
+import it.polito.tdp.lab3.model.StudenteDAO;
 import javafx.event.ActionEvent;
 	import javafx.fxml.FXML;
 	import javafx.scene.control.Button;
@@ -53,11 +54,30 @@ import javafx.event.ActionEvent;
 
 	    @FXML
 	    void doAuto(ActionEvent event) {
+	    	
+	    	int matricola=Integer.parseInt(txtMatricola.getText());
+	        dbc.Connessione();
+	        dbc.letturaStudentiDB(matricola);
+
+	    	txtNome.setText(dbc.getS().getNome());
+	    	txtCognome.setText(dbc.getS().getCognome());
+
 
 	    }
 
 	    @FXML
 	    void doCerca(ActionEvent event) {
+
+	        dbc.Connessione();
+	        for(CorsoDAO d:dbc.getListaCorsi()){
+	        	if(d.getNome().equals(comboBox.getValue()))
+	    	        dbc.letturaStudentiInCorsiDB(d.getCodIns());
+	        }
+	        String s="";
+	        for(StudenteDAO sc:dbc.getSc().getListaStudentiCorso()){
+	        	s+=sc.toString()+"\n";
+	        }
+	        	txtContent.setText(s);
 
 	    }
 
@@ -85,10 +105,11 @@ import javafx.event.ActionEvent;
 
 	        dbc=new DBConnect();
 	        
-	        dbc.letturaDB();
+	        dbc.Connessione();
+	        dbc.letturaCorsiDB();
+        	comboBox.getItems().add(" ");
 	        for(CorsoDAO d:dbc.getListaCorsi())
 	        	comboBox.getItems().add(d.getNome());
-
 	    }
 	}
 

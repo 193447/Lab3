@@ -4,9 +4,10 @@
 	import java.net.URL;
 import java.util.ResourceBundle;
 
-import it.polito.tdp.lab3.db.DBConnect;
-import it.polito.tdp.lab3.model.CorsoDAO;
-import it.polito.tdp.lab3.model.StudenteDAO;
+import it.polito.tdp.lab3.db.CorsoDAO;
+import it.polito.tdp.lab3.db.StudenteDAO;
+import it.polito.tdp.lab3.model.Corso;
+import it.polito.tdp.lab3.model.Studente;
 import javafx.event.ActionEvent;
 	import javafx.fxml.FXML;
 	import javafx.scene.control.Button;
@@ -16,7 +17,8 @@ import javafx.event.ActionEvent;
 
 	public class SegreteriaStudentiController {
 		
-		DBConnect dbc;
+		StudenteDAO sd;
+		CorsoDAO cd;
 
 
 	    @FXML
@@ -55,34 +57,89 @@ import javafx.event.ActionEvent;
 	    @FXML
 	    void doAuto(ActionEvent event) {
 	    	
+	    	if(txtMatricola.getText().matches("[0-9]")){
 	    	int matricola=Integer.parseInt(txtMatricola.getText());
-	        dbc.Connessione();
-	        dbc.letturaStudentiDB(matricola);
 
-	    	txtNome.setText(dbc.getS().getNome());
-	    	txtCognome.setText(dbc.getS().getCognome());
+	        sd.letturaStudentiDB(matricola,true);
+
+	    	txtNome.setText(sd.getS().getNome());
+	    	txtCognome.setText(sd.getS().getCognome());
+	    	}
+	    	else
+	    		txtContent.setText("Errore la stringa inserita  deve essere un numero");
 
 
 	    }
 
 	    @FXML
 	    void doCerca(ActionEvent event) {
+	    	if(txtMatricola.getText().isEmpty()){
+	    	Corso c=null;
+	        for(Corso d:cd.getListaCorsi()){
+	        	if(d.getNome().equals(comboBox.getValue())){
+	        		c=d;
+	    	        sd.letturaStudentiInCorsiDB(c);
+	        }
+	        }
+	        String s1="";
+	        for(Studente s:c.getListaStudentiInCorso()){
+	        	s1+=s.toString()+"\n";
+	        }
+	        s1+=" "+sd.getJ();
+	        txtContent.setText(s1);
+	    	}
+	    	 if(!txtMatricola.getText().isEmpty() && comboBox.getValue().equals(" ")){
+		    	int matricola=Integer.parseInt(txtMatricola.getText());
+	    		boolean flag=sd.letturaStudentiDB(matricola,false);
+	    		
+	    		if(flag==false){
+	    		String s1="";
+		        for(Corso c:sd.getS().getListaCorsiStudente()){
+		        	s1+=c.toString()+"\n";
+		        }
+		        	txtContent.setText(s1);
+		    	}
+	    		else
+	    			txtContent.setText("Errore:Studente inesistente");
+	    	}
+	    	if(!txtMatricola.getText().isEmpty() && !comboBox.getValue().equals(" ")) {
+	    		Corso c=null;
+		        for(Corso d:cd.getListaCorsi()){
+		        	if(d.getNome().equals(comboBox.getValue())){
+		        		c=d;
+		        	}
+		        }
+	    		boolean flag=sd.PresenzaStudenteInCorso(c, Integer.parseInt(txtMatricola.getText()));
+	    		Studente s=sd.letturaAttributiStudenteDB(Integer.parseInt(txtMatricola.getText()));
+	    		if(flag==true){
+	    			txtContent.setText("Errore:"+s.getNome()+" "+s.getCognome()+" "+"("+s.getMatricola()+")"+" "+"non iscritto al corso"+" "+c.getNome());
+	    		}
+	    		else
+	    			txtContent.setText(s.getNome()+" "+s.getCognome()+" "+"("+s.getMatricola()+")"+" "+"iscritto al corso"+" "+c.getNome());
 
-	        dbc.Connessione();
-	        for(CorsoDAO d:dbc.getListaCorsi()){
-	        	if(d.getNome().equals(comboBox.getValue()))
-	    	        dbc.letturaStudentiInCorsiDB(d.getCodIns());
-	        }
-	        String s="";
-	        for(StudenteDAO sc:dbc.getSc().getListaStudentiCorso()){
-	        	s+=sc.toString()+"\n";
-	        }
-	        	txtContent.setText(s);
+	    	}
 
 	    }
 
+
 	    @FXML
 	    void doIscrivi(ActionEvent event) {
+	    	
+	    	Corso c=null;
+	        for(Corso d:cd.getListaCorsi()){
+	        	if(d.getNome().equals(comboBox.getValue())){
+	        		c=d;	    	         
+	        }
+	        }
+	        boolean f=sd.updateStudenteInCorsoDB(Integer.parseInt(txtMatricola.getText()),c);
+
+	        Studente s=sd.letturaAttributiStudenteDB(Integer.parseInt(txtMatricola.getText()));
+    		if(f==false){
+    			txtContent.setText("Errore:"+s.getNome()+" "+s.getCognome()+" "+"("+s.getMatricola()+")"+" "+"è già iscritto al corso"+" "+c.getNome());
+    		}
+    		else
+    			txtContent.setText(s.getNome()+" "+s.getCognome()+" "+"("+s.getMatricola()+")"+" "+"è stato iscritto al corso"+" "+c.getNome());
+
 
 	    }
 
@@ -103,13 +160,15 @@ import javafx.event.ActionEvent;
 	        assert txtContent != null : "fx:id=\"txtContent\" was not injected: check your FXML file 'SegreteriaStudenti.fxml'.";
 	        assert btnReset != null : "fx:id=\"btnReset\" was not injected: check your FXML file 'SegreteriaStudenti.fxml'.";
 
-	        dbc=new DBConnect();
+	        sd= new StudenteDAO();
+			cd= new CorsoDAO();
+
 	        
-	        dbc.Connessione();
-	        dbc.letturaCorsiDB();
+	        cd.letturaCorsiDB();
         	comboBox.getItems().add(" ");
-	        for(CorsoDAO d:dbc.getListaCorsi())
+	        for(Corso d:cd.getListaCorsi())
 	        	comboBox.getItems().add(d.getNome());
+	        comboBox.setValue(" ");
 	    }
 	}
 
